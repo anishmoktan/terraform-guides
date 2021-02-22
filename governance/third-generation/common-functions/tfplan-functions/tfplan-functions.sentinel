@@ -20,7 +20,7 @@ import "types"
 
 ### find_resources ###
 # Find all resources of a specific type using the tfplan/v2 import.
-# Include resources that are not being permamently deleted.
+# Include resources that are not being permanently deleted.
 # Technically, this returns a map of resource changes.
 find_resources = func(type) {
   resources = filter tfplan.resource_changes as address, rc {
@@ -35,7 +35,7 @@ find_resources = func(type) {
 
 ### find_resources_by_provider ###
 # Find all resources for a specific provider using the tfplan/v2 import.
-# Include resources that are not being permamently deleted.
+# Include resources that are not being permanently deleted.
 # Technically, this returns a map of resource changes.
 find_resources_by_provider = func(provider) {
   resources = filter tfplan.resource_changes as address, rc {
@@ -50,7 +50,7 @@ find_resources_by_provider = func(provider) {
 
 ### find_datasources ###
 # Find all data sources of a specific type using the tfplan/v2 import.
-# Include data sources that are not being permamently deleted.
+# Include data sources that are not being permanently deleted.
 # Technically, this returns a map of resource changes.
 find_datasources = func(type) {
   datasources = filter tfplan.resource_changes as address, rc {
@@ -67,7 +67,7 @@ find_datasources = func(type) {
 
 ### find_datasources_by_provider ###
 # Find all data sources for a specific provider using the tfplan/v2 import.
-# Include data sources that are not being permamently deleted.
+# Include data sources that are not being permanently deleted.
 # Technically, this returns a map of resource changes.
 find_datasources_by_provider = func(provider) {
   datasources = filter tfplan.resource_changes as address, rc {
@@ -569,6 +569,40 @@ filter_attribute_greater_than_value = func(resources, attr, value, prtmsg) {
   return {"resources":violators,"messages":messages}
 }
 
+### filter_attribute_greater_than_equal_to_value ###
+# Filter a list of resources to those with a specified
+# attribute (attr) that is greater than a given numeric value.
+# Resources should be derived by applying filters to tfplan.resource_changes.
+# Set prtmsg to `true` (without quotes) if you want to print violation messages.
+filter_attribute_greater_than_equal_to_value = func(resources, attr, value, prtmsg) {
+  violators = {}
+	messages = {}
+  for resources as address, rc {
+    v = evaluate_attribute(rc, attr) else null
+    if float(v) else null is null {
+      # Add the resource and a warning message to the violators list
+      message = to_string(address) + " has " + to_string(attr) +
+                " that is null or undefined. " + "It is supposed to be less " +
+                "than " + to_string(value)
+      violators[address] = rc
+			messages[address] = message
+      if prtmsg {
+        print(message)
+      }
+    } else if float(v) >= value {
+      # Add the resource and a warning message to the violators list
+      message = to_string(address) + " has " + to_string(attr) + " with value " +
+                to_string(v) + " that is greater than or equal to " + to_string(value)
+      violators[address] = rc
+			messages[address] = message
+      if prtmsg {
+        print(message)
+      }
+    }
+  }
+  return {"resources":violators,"messages":messages}
+}
+
 ### filter_attribute_less_than_value ###
 # Filter a list of resources to those with a specified
 # attribute (attr) that is less than a given numeric value.
@@ -593,6 +627,40 @@ filter_attribute_less_than_value = func(resources, attr, value, prtmsg) {
       # Add the resource and a warning message to the violators list
       message = to_string(address) + " has " + to_string(attr) + " with value " +
                 to_string(v) + " that is less than " + to_string(value)
+      violators[address] = rc
+			messages[address] = message
+      if prtmsg {
+        print(message)
+      }
+    }
+  }
+  return {"resources":violators,"messages":messages}
+}
+
+### filter_attribute_less_than_equal_to_value ###
+# Filter a list of resources to those with a specified
+# attribute (attr) that is less than a given numeric value.
+# Resources should be derived by applying filters to tfplan.resource_changes.
+# Set prtmsg to `true` (without quotes) if you want to print violation messages.
+filter_attribute_less_than_equal_to_value = func(resources, attr, value, prtmsg) {
+  violators = {}
+	messages = {}
+  for resources as address, rc {
+    v = evaluate_attribute(rc, attr) else null
+    if float(v) else null is null {
+      # Add the resource and a warning message to the violators list
+      message = to_string(address) + " has " + to_string(attr) +
+                " that is null or undefined. " + "It is supposed to be greater " +
+                "than " + to_string(value)
+      violators[address] = rc
+			messages[address] = message
+      if prtmsg {
+        print(message)
+      }
+    } else if float(v) <= value {
+      # Add the resource and a warning message to the violators list
+      message = to_string(address) + " has " + to_string(attr) + " with value " +
+                to_string(v) + " that is less than or equal to " + to_string(value)
       violators[address] = rc
 			messages[address] = message
       if prtmsg {
